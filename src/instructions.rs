@@ -1,5 +1,6 @@
 use crate::instructions::Instruction::*;
 use crate::stack::Stack;
+use crate::vm::VM;
 
 pub(crate) enum Instruction {
     NoOp,               // NO-OP
@@ -31,98 +32,111 @@ pub(crate) enum Instruction {
 }
 
 impl Instruction {
-    pub fn run(&mut self, stack: &mut Stack) {
+    pub fn run(&self, vm: &mut VM) {
         match self {
-            LoadConst0 => stack.push(0),
-            LoadConst1 => stack.push(1),
+            LoadConst0 => vm.stack.push(0),
+            LoadConst1 => vm.stack.push(1),
             Duplicate => {
-                if let Some(downwards_by) = stack.pop() {
-                    if let Some(original_top_value) = stack.pop() {
+                if let Some(downwards_by) = vm.stack.pop() {
+                    if let Some(original_top_value) = vm.stack.pop() {
                         let mut temp_stack = Stack::new();
                         for _ in 0..downwards_by {
-                            temp_stack.push(stack.pop().unwrap_or_default());
+                            temp_stack.push(vm.stack.pop().unwrap_or_default());
                         }
-                        stack.push(original_top_value);
+                        vm.stack.push(original_top_value);
                         while !temp_stack.is_empty() {
-                            stack.push(temp_stack.pop().unwrap_or_default());
+                            vm.stack.push(temp_stack.pop().unwrap_or_default());
                         }
-                        stack.push(original_top_value);
+                        vm.stack.push(original_top_value);
                     }
                 }
             },
             Pop => {
-                stack.pop();
+                vm.stack.pop();
+            },
+            Jump => {
+                if let Some(value) = vm.stack.pop() {
+                    vm.jump(value as usize);
+                }
+            },
+            Call => {
+                if let Some(value) = vm.stack.pop() {
+                    vm.enter_frame_and_jump(value as usize);
+                }
+            },
+            Return => {
+                vm.exit_frame()
             },
             Panic => {
                 panic!()
             }
             AddInt => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push(a+b)
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push(a+b)
                     }
                 }
             }
             SubtractInt => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push(a-b)
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push(a-b)
                     }
                 }
             }
             MultiplyInt => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push(a*b)
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push(a*b)
                     }
                 }
             }
             DivideInt => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push(a/b)
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push(a/b)
                     }
                 }
             }
             ModuloInt => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push(a%b)
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push(a%b)
                     }
                 }
             }
             AddFloat => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push((f32::from_bits(a)+f32::from_bits(b)).to_bits())
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push((f32::from_bits(a)+f32::from_bits(b)).to_bits())
                     }
                 }
             }
             SubtractFloat => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push((f32::from_bits(a)-f32::from_bits(b)).to_bits())
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push((f32::from_bits(a)-f32::from_bits(b)).to_bits())
                     }
                 }
             }
             MultiplyFloat => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push((f32::from_bits(a)*f32::from_bits(b)).to_bits())
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push((f32::from_bits(a)*f32::from_bits(b)).to_bits())
                     }
                 }
             }
             DivideFloat => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push((f32::from_bits(a)/f32::from_bits(b)).to_bits())
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push((f32::from_bits(a)/f32::from_bits(b)).to_bits())
                     }
                 }
             }
             ModuloFloat => {
-                if let Some(a) = stack.pop() {
-                    if let Some(b) = stack.pop() {
-                        stack.push((f32::from_bits(a)%f32::from_bits(b)).to_bits())
+                if let Some(a) = vm.stack.pop() {
+                    if let Some(b) = vm.stack.pop() {
+                        vm.stack.push((f32::from_bits(a)%f32::from_bits(b)).to_bits())
                     }
                 }
             }
