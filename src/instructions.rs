@@ -2,7 +2,7 @@ use crate::instructions::Instruction::*;
 use crate::stack::Stack;
 use std::ops::Shl;
 
-enum Instruction {
+pub(crate) enum Instruction {
     Load(u16),
     Write(u16),
     LoadConst(u16),
@@ -30,17 +30,17 @@ impl Instruction {
     pub fn run(&mut self, stack: &mut Stack) {
         match self {
             LoadConst(value) => stack.push(*value as u32),
-            Duplicate(downwardsBy) => {
-                if let Some(originalTopValue) = stack.pop() {
+            Duplicate(downwards_by) => {
+                if let Some(original_top_value) = stack.pop() {
                     let mut temp_stack = Stack::new();
-                    for _ in 1..downwardsBy {
+                    for _ in 1..*downwards_by {
                         temp_stack.push(stack.pop().unwrap_or_default());
                     }
-                    stack.push(originalTopValue);
+                    stack.push(original_top_value);
                     while !temp_stack.is_empty() {
                         stack.push(temp_stack.pop().unwrap_or_default());
                     }
-                    stack.push(originalTopValue);
+                    stack.push(original_top_value);
                 }
             }
             Panic => {
@@ -84,35 +84,35 @@ impl Instruction {
             AddFloat => {
                 if let Some(a) = stack.pop() {
                     if let Some(b) = stack.pop() {
-                        stack.push(f32::from_bits(a)+f32::from_bits(b).to_bits())
+                        stack.push((f32::from_bits(a)+f32::from_bits(b)).to_bits())
                     }
                 }
             }
             SubtractFloat => {
                 if let Some(a) = stack.pop() {
                     if let Some(b) = stack.pop() {
-                        stack.push(f32::from_bits(a)-f32::from_bits(b).to_bits())
+                        stack.push((f32::from_bits(a)-f32::from_bits(b)).to_bits())
                     }
                 }
             }
             MultiplyFloat => {
                 if let Some(a) = stack.pop() {
                     if let Some(b) = stack.pop() {
-                        stack.push(f32::from_bits(a)*f32::from_bits(b).to_bits())
+                        stack.push((f32::from_bits(a)*f32::from_bits(b)).to_bits())
                     }
                 }
             }
             DivideFloat => {
                 if let Some(a) = stack.pop() {
                     if let Some(b) = stack.pop() {
-                        stack.push(f32::from_bits(a)/f32::from_bits(b).to_bits())
+                        stack.push((f32::from_bits(a)/f32::from_bits(b)).to_bits())
                     }
                 }
             }
             ModuloFloat => {
                 if let Some(a) = stack.pop() {
                     if let Some(b) = stack.pop() {
-                        stack.push(f32::from_bits(a)%f32::from_bits(b).to_bits())
+                        stack.push((f32::from_bits(a)%f32::from_bits(b)).to_bits())
                     }
                 }
             }
@@ -147,7 +147,7 @@ impl Instruction {
 }
 
 fn operands_from_packed(packed: u32) -> u32 {
-    packed & 0xFF000000
+    packed & 0x00FFFFFF
 }
 
 fn u16_operand_from_packed(packed: u32) -> u16 {
