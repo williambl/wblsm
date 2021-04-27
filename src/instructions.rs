@@ -1,46 +1,53 @@
 use crate::instructions::Instruction::*;
 use crate::stack::Stack;
 use std::ops::Shl;
+use std::fmt::{Display, Formatter};
 
 pub(crate) enum Instruction {
-    Load(u16),
-    Write(u16),
-    LoadConst(u16),
-    Duplicate(u16),
+    Load,               // load value onto stack from heap pointer
+    Write,              // write to heap at pointer from stack
+    LoadConst0,         // load `0` onto stack
+    LoadConst1,         // load `1` onto stack
+    Duplicate,          // duplicate top stack element `arg` elements down
 
-    Jump(u16),
-    Call(u16),
-    Return,
-    Panic,
+    Jump,               // jump to program pointer
+    Call,               // jump to program pointer and open a new frame
+    Return,             // step out of a frame
+    Panic,              // terminate the program
 
-    AddInt,
-    SubtractInt,
-    MultiplyInt,
-    DivideInt,
-    ModuloInt,
+    // Integer Arithmetic
+    AddInt,             // a + b
+    SubtractInt,        // a - b
+    MultiplyInt,        // a * b
+    DivideInt,          // a / b
+    ModuloInt,          // a % b
 
-    AddFloat,
-    SubtractFloat,
-    MultiplyFloat,
-    DivideFloat,
-    ModuloFloat
+    // Float Arithmetic
+    AddFloat,           // a + b
+    SubtractFloat,      // a - b
+    MultiplyFloat,      // a * b
+    DivideFloat,        // a / b
+    ModuloFloat         // a % b
 }
 
 impl Instruction {
     pub fn run(&mut self, stack: &mut Stack) {
         match self {
-            LoadConst(value) => stack.push(*value as u32),
-            Duplicate(downwards_by) => {
-                if let Some(original_top_value) = stack.pop() {
-                    let mut temp_stack = Stack::new();
-                    for _ in 1..*downwards_by {
-                        temp_stack.push(stack.pop().unwrap_or_default());
+            LoadConst0 => stack.push(0),
+            LoadConst1 => stack.push(1),
+            Duplicate => {
+                if let Some(downwards_by) = stack.pop() {
+                    if let Some(original_top_value) = stack.pop() {
+                        let mut temp_stack = Stack::new();
+                        for _ in 0..downwards_by {
+                            temp_stack.push(stack.pop().unwrap_or_default());
+                        }
+                        stack.push(original_top_value);
+                        while !temp_stack.is_empty() {
+                            stack.push(temp_stack.pop().unwrap_or_default());
+                        }
+                        stack.push(original_top_value);
                     }
-                    stack.push(original_top_value);
-                    while !temp_stack.is_empty() {
-                        stack.push(temp_stack.pop().unwrap_or_default());
-                    }
-                    stack.push(original_top_value);
                 }
             }
             Panic => {
@@ -120,36 +127,28 @@ impl Instruction {
         }
     }
 
-    pub fn from_packed_instruction(packed: u32) -> Option<Instruction> {
-        let opcode = packed >> 24;
+    pub fn from_opcode(opcode: u32) -> Option<Instruction> {
         match opcode {
-            0 => Some(Load(u16_operand_from_packed(packed))),
-            1 => Some(Write(u16_operand_from_packed(packed))),
-            2 => Some(LoadConst(u16_operand_from_packed(packed))),
-            3 => Some(Duplicate(u16_operand_from_packed(packed))),
-            4 => Some(Jump(u16_operand_from_packed(packed))),
-            5 => Some(Call(u16_operand_from_packed(packed))),
-            6 => Some(Return),
-            7 => Some(Panic),
-            8 => Some(AddInt),
-            9 => Some(SubtractInt),
-            10 => Some(MultiplyInt),
-            11 => Some(DivideInt),
-            12 => Some(ModuloInt),
-            13 => Some(AddFloat),
-            14 => Some(SubtractFloat),
-            15 => Some(MultiplyFloat),
-            16 => Some(DivideFloat),
-            17 => Some(ModuloFloat),
+            0 => Some(Load),
+            1 => Some(Write),
+            2 => Some(LoadConst0),
+            3 => Some(LoadConst1),
+            4 => Some(Duplicate),
+            5 => Some(Jump),
+            6 => Some(Call),
+            7 => Some(Return),
+            8 => Some(Panic),
+            9 => Some(AddInt),
+            10 => Some(SubtractInt),
+            11 => Some(MultiplyInt),
+            12 => Some(DivideInt),
+            13 => Some(ModuloInt),
+            14 => Some(AddFloat),
+            15 => Some(SubtractFloat),
+            16 => Some(MultiplyFloat),
+            17 => Some(DivideFloat),
+            18 => Some(ModuloFloat),
             _ => None
         }
     }
-}
-
-fn operands_from_packed(packed: u32) -> u32 {
-    packed & 0x00FFFFFF
-}
-
-fn u16_operand_from_packed(packed: u32) -> u16 {
-    (operands_from_packed(packed) >> 8) as u16
 }
