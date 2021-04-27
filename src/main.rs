@@ -1,24 +1,35 @@
 use crate::stack::Stack;
+use std::io;
+use std::io::Read;
+use std::str::FromStr;
 
 mod stack;
 
 fn main() {
     let mut stack: Stack = Stack::new();
-    stack.push(100);
-    if let Some(x) = stack.peek() {
-        println!("{}", x)
-    }
-    if let Some(x) = stack.pop() {
-        println!("{}", x)
-    }
-    for i in 0..10 {
-        stack.push(i);
-    }
-    println!("{}", stack.len());
-    while !stack.is_empty() {
-        if let Some(x) = stack.pop() {
+    let mut program: Vec<u32> = read_input();
+
+    while !program.is_empty() {
+        if let Some(x) = program.pop() {
             println!("{}", x)
         }
     }
-    println!("{}", stack.len());
+}
+
+fn read_input() -> Vec<u32> {
+    let mut stdin = io::stdin();
+    let mut program: Vec<u32> = Vec::new();
+
+    let mut line = String::new();
+    while let Ok(x) = stdin.read_line(&mut line)  {
+        line.pop();
+        if line.is_empty() { break }
+
+        if let Ok(value) = line.parse::<u32>() {
+            program.push(value);
+        }
+        line.clear();
+    }
+
+    program
 }
