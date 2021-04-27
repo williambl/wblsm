@@ -1,14 +1,14 @@
 use crate::instructions::Instruction::*;
 use crate::stack::Stack;
-use std::ops::Shl;
-use std::fmt::{Display, Formatter};
 
 pub(crate) enum Instruction {
+    NoOp,               // NO-OP
     Load,               // load value onto stack from heap pointer
     Write,              // write to heap at pointer from stack
     LoadConst0,         // load `0` onto stack
     LoadConst1,         // load `1` onto stack
     Duplicate,          // duplicate top stack element `arg` elements down
+    Pop,                // Pops an entry off the stack and does nothing with it.
 
     Jump,               // jump to program pointer
     Call,               // jump to program pointer and open a new frame
@@ -49,7 +49,10 @@ impl Instruction {
                         stack.push(original_top_value);
                     }
                 }
-            }
+            },
+            Pop => {
+                stack.pop();
+            },
             Panic => {
                 panic!()
             }
@@ -129,25 +132,27 @@ impl Instruction {
 
     pub fn from_opcode(opcode: u32) -> Option<Instruction> {
         match opcode {
-            0 => Some(Load),
-            1 => Some(Write),
-            2 => Some(LoadConst0),
-            3 => Some(LoadConst1),
-            4 => Some(Duplicate),
-            5 => Some(Jump),
-            6 => Some(Call),
-            7 => Some(Return),
-            8 => Some(Panic),
-            9 => Some(AddInt),
-            10 => Some(SubtractInt),
-            11 => Some(MultiplyInt),
-            12 => Some(DivideInt),
-            13 => Some(ModuloInt),
-            14 => Some(AddFloat),
-            15 => Some(SubtractFloat),
-            16 => Some(MultiplyFloat),
-            17 => Some(DivideFloat),
-            18 => Some(ModuloFloat),
+            0 => Some(NoOp),
+            1 => Some(Load),
+            2 => Some(Write),
+            3 => Some(LoadConst0),
+            4 => Some(LoadConst1),
+            5 => Some(Duplicate),
+            6 => Some(Pop),
+            7 => Some(Jump),
+            8 => Some(Call),
+            9 => Some(Return),
+            10 => Some(Panic),
+            11 => Some(AddInt),
+            12 => Some(SubtractInt),
+            13 => Some(MultiplyInt),
+            14 => Some(DivideInt),
+            15 => Some(ModuloInt),
+            16 => Some(AddFloat),
+            17 => Some(SubtractFloat),
+            18 => Some(MultiplyFloat),
+            19 => Some(DivideFloat),
+            20 => Some(ModuloFloat),
             _ => None
         }
     }

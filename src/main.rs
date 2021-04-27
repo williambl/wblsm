@@ -5,16 +5,27 @@ use std::io;
 mod stack;
 mod instructions;
 
-fn main() {
-    let mut stack: Stack = Stack::new();
-    let mut program: Vec<u32> = read_input();
+struct VmData {
+    program: Vec<u32>,
+    program_pointer: usize,
+    stack: Stack,
+    heap: [u8; 1024]
+}
 
-    for opcode in program {
+fn main() {
+    let mut vm: VmData = VmData {
+        program: read_input(),
+        program_pointer: 0,
+        stack: Stack::new(),
+        heap: [0; 1024]
+    };
+
+    for opcode in vm.program {
         if let Some(mut instr) = Instruction::from_opcode(opcode) {
-            instr.run(&mut stack)
+            instr.run(&mut (vm.stack))
         }
     }
-    println!("{}", stack.peek().unwrap_or(&0))
+    println!("{}", vm.stack.peek().unwrap_or(&0))
 }
 
 fn read_input() -> Vec<u32> {
@@ -22,7 +33,7 @@ fn read_input() -> Vec<u32> {
     let mut program: Vec<u32> = Vec::new();
 
     let mut line = String::new();
-    while let Ok(x) = stdin.read_line(&mut line)  {
+    while let Ok(_) = stdin.read_line(&mut line)  {
         line.pop();
         if line.is_empty() { break }
 
