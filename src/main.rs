@@ -1,30 +1,22 @@
 use crate::stack::Stack;
 use crate::instructions::Instruction;
+use crate::vm::VM;
 use std::io;
 
 mod stack;
 mod instructions;
-
-struct VmData {
-    program: Vec<u32>,
-    program_pointer: usize,
-    stack: Stack,
-    heap: [u8; 1024]
-}
+mod vm;
 
 fn main() {
-    let mut vm: VmData = VmData {
+    let mut vm: VM = VM {
         program: read_input(),
         program_pointer: 0,
         stack: Stack::new(),
         heap: [0; 1024]
     };
 
-    for opcode in vm.program {
-        if let Some(mut instr) = Instruction::from_opcode(opcode) {
-            instr.run(&mut (vm.stack))
-        }
-    }
+    vm.run_program();
+
     println!("{}", vm.stack.peek().unwrap_or(&0))
 }
 
