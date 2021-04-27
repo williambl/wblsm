@@ -1,11 +1,12 @@
 use crate::instructions::Instruction;
 use crate::stack::Stack;
+use bytebuffer::ByteBuffer;
 
 pub(crate) struct VM {
     pub(crate) program: Vec<u32>,
     pub(crate) program_pointer: usize,
     pub(crate) stack: Stack,
-    pub(crate) heap: [u8; 1024]
+    pub(crate) heap: ByteBuffer
 }
 
 impl VM {

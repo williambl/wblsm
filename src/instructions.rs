@@ -34,6 +34,20 @@ pub(crate) enum Instruction {
 impl Instruction {
     pub fn run(&self, vm: &mut VM) {
         match self {
+            Load => {
+                if let Some(heap_location) = vm.stack.pop() {
+                    vm.heap.set_rpos(heap_location as usize);
+                    vm.stack.push(vm.heap.read_u32());
+                }
+            },
+            Write => {
+                if let Some(heap_location) = vm.stack.pop() {
+                    if let Some(value) = vm.stack.pop() {
+                        vm.heap.set_wpos(heap_location as usize);
+                        vm.heap.write_u32(value);
+                    }
+                }
+            }
             LoadConst0 => vm.stack.push(0),
             LoadConst1 => vm.stack.push(1),
             Duplicate => {

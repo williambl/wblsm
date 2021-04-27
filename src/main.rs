@@ -2,6 +2,7 @@ use crate::stack::Stack;
 use crate::instructions::Instruction;
 use crate::vm::VM;
 use std::io;
+use bytebuffer::ByteBuffer;
 
 mod stack;
 mod instructions;
@@ -12,8 +13,10 @@ fn main() {
         program: read_input(),
         program_pointer: 0,
         stack: Stack::new(),
-        heap: [0; 1024]
+        heap: ByteBuffer::new()
     };
+
+    vm.heap.write_u32(4);
 
     vm.run_program();
 
